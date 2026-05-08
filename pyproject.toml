@@ -1,0 +1,73 @@
+[project]
+name = "gradipin"
+version = "0.1.0"
+description = "Static URLs for your Gradio demos. One line of code."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Gradipin", email = "hello@gradipin.com" }]
+keywords = ["gradio", "ml", "demo", "tunnel", "share"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+  "requests>=2.31",
+  "click>=8.1",
+  "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+gradio = ["gradio>=4.0"]
+dev = [
+  "pytest>=8.0",
+  "pytest-mock>=3.12",
+  "ruff>=0.5",
+  "mypy>=1.10",
+  "responses>=0.25",
+  "types-requests>=2.31",
+  "build>=1.2",
+  "twine>=5.1",
+]
+
+[project.scripts]
+gradipin = "gradipin.cli:main"
+
+[project.urls]
+Homepage = "https://gradipin.com"
+Documentation = "https://github.com/gradipin/gradipin-python"
+Repository = "https://github.com/gradipin/gradipin-python"
+Issues = "https://github.com/gradipin/gradipin-python/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gradipin"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+strict = true
+python_version = "3.10"
+files = ["src/gradipin"]
+
+[[tool.mypy.overrides]]
+module = ["gradio", "gradio.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
