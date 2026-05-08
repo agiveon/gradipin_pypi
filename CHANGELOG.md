@@ -5,7 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.2] - 2026-05-08
+
+### Fixed
+- Republishes the share-URL plumbing that was supposed to ship in `0.1.1`.
+  The `0.1.1` wheel on TestPyPI was built before `_Session.public_url`,
+  `_absorb_share_url`, and `_public_host` landed in the source tree, so
+  it only contained the `gradipin.com` → `gradipin.lovable.app` host change.
+  `0.1.2` ships the actual share-URL contract end to end.
+
 ## [0.1.1] - 2026-05-08
+
+> **Note:** the wheel published to TestPyPI under this version is missing
+> the share-URL changes described below. Use `0.1.2` instead — those
+> changes are what actually ship in `0.1.2`.
+
 
 ### Changed
 - The canonical public share URL is now read from the API response

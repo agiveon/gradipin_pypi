@@ -1,6 +1,6 @@
 [project]
 name = "gradipin"
-version = "0.1.1"
+version = "0.1.2"
 description = "Static URLs for your Gradio demos. One line of code."
 readme = "README.md"
 requires-python = ">=3.10"

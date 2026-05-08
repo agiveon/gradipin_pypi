@@ -24,7 +24,7 @@ from .heartbeat import HeartbeatThread
 
 logger = logging.getLogger("gradipin")
 
-USER_AGENT = "gradipin-python/0.1.1"
+USER_AGENT = "gradipin-python/0.1.2"
 
 
 def _public_host(api_url: str) -> str:
