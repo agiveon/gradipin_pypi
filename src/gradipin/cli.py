@@ -7,7 +7,7 @@ import click
 import requests
 
 from . import __version__
-from .client import USER_AGENT
+from .client import USER_AGENT, _public_host
 from .config import (
     CONFIG_FILE,
     clear_key,
@@ -53,8 +53,9 @@ def list_apps() -> None:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)
 
+    api_url = resolve_api_url()
     r = requests.get(
-        f"{resolve_api_url()}/apps",
+        f"{api_url}/apps",
         headers={
             "Authorization": f"Bearer {key}",
             "User-Agent": USER_AGENT,
@@ -64,7 +65,7 @@ def list_apps() -> None:
     r.raise_for_status()
     apps = r.json().get("apps", [])
     if not apps:
-        click.echo("No apps yet. Create one at https://gradipin.com/dashboard")
+        click.echo(f"No apps yet. Create one at {_public_host(api_url)}/dashboard")
         return
     for app in apps:
         status_icon = _GREEN_CIRCLE if app.get("status") == "live" else _WHITE_CIRCLE

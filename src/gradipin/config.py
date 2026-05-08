@@ -9,7 +9,7 @@ from dotenv import dotenv_values
 
 from .exceptions import ConfigurationError
 
-DEFAULT_API_URL: Final = "https://api.gradipin.com/v1"
+DEFAULT_API_URL: Final = "https://gradipin.lovable.app/api/v1"
 DEFAULT_HEARTBEAT_SECONDS: Final = 30
 CONFIG_DIR: Final = Path.home() / ".gradipin"
 CONFIG_FILE: Final = CONFIG_DIR / "config"

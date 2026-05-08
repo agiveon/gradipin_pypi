@@ -3,10 +3,10 @@
 **Static URLs for your Gradio demos. One line of code.**
 
 Gradio's `share=True` gives you a public URL that changes every time you restart
-your demo. Gradipin sits in front of those tunnels and gives you a stable
-`https://gradipin.com/go/<your-app>` link that always points to whichever
-tunnel is currently live — perfect for tweets, READMEs, and your team's "demos"
-channel.
+your demo. Gradipin sits in front of those tunnels and gives you a stable link
+like `https://gradipin.lovable.app/go/<account>/<app>` that always points to
+whichever tunnel is currently live — perfect for tweets, READMEs, and your
+team's "demos" channel.
 
 ```python
 import gradio as gr
@@ -14,8 +14,14 @@ import gradipin
 
 demo = gr.Interface(lambda x: x.upper(), "text", "text")
 gradipin.share(demo, app="vision-model")
-# → https://gradipin.com/go/vision-model
+# Prints something like:
+#   Gradipin: https://gradipin.lovable.app/go/your-account/vision-model
+#     → https://abc123.gradio.live
 ```
+
+The exact URL format depends on your Gradipin deployment — the canonical
+public URL is returned by the API and is also exposed as
+`session.public_url` if you need it programmatically.
 
 That's it. Restart the script, get a new tunnel, your friends still hit the
 same URL.
@@ -35,7 +41,7 @@ pip install gradipin
 
 ## Authenticate
 
-Grab an API key from [gradipin.com/dashboard](https://gradipin.com/dashboard),
+Grab an API key from [gradipin.lovable.app/dashboard](https://gradipin.lovable.app/dashboard),
 then either:
 
 ```bash
@@ -86,8 +92,8 @@ API key resolution (first match wins):
 Other environment variables:
 
 - `GRADIPIN_API_URL` — override the API base URL (default
-  `https://api.gradipin.com/v1`). Useful for self-hosted backends or local
-  development.
+  `https://gradipin.lovable.app/api/v1`). Useful for self-hosted backends or
+  local development.
 - `GRADIPIN_HEARTBEAT` — heartbeat interval in seconds (default `30`).
 
 ## Development

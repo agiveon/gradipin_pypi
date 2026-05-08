@@ -24,7 +24,17 @@ from .heartbeat import HeartbeatThread
 
 logger = logging.getLogger("gradipin")
 
-USER_AGENT = "gradipin-python/0.1.0"
+USER_AGENT = "gradipin-python/0.1.1"
+
+
+def _public_host(api_url: str) -> str:
+    """Strip the ``/api/v1`` or ``/v1`` suffix from an API URL.
+
+    Used to derive the public-facing host (for ``/go/<app>`` and ``/dashboard``
+    URLs) when the server doesn't tell us what they are. Best-effort guess only:
+    the canonical URL should always come from the API response when available.
+    """
+    return api_url.removesuffix("/api/v1").removesuffix("/v1")
 
 
 class _Session:
@@ -44,14 +54,28 @@ class _Session:
         self.url = url
         self.api_url = api_url
         self.offline_message = offline_message
+        self.public_url: str = self._fallback_public_url()
         self._heartbeat = HeartbeatThread(self._tick, heartbeat_seconds)
         self._http = requests.Session()
         self._http.headers["Authorization"] = f"Bearer {key}"
         self._http.headers["User-Agent"] = USER_AGENT
         self._closed = False
 
+    def _fallback_public_url(self) -> str:
+        """Best-effort guess at the public URL when the API doesn't supply one."""
+        return f"{_public_host(self.api_url)}/go/{self.app}"
+
+    def _absorb_share_url(self, response: dict[str, Any]) -> None:
+        """Update ``self.public_url`` if the server returned a fresh canonical URL."""
+        server_url = response.get("share_url")
+        if isinstance(server_url, str) and server_url and server_url != self.public_url:
+            logger.debug(
+                "Gradipin share URL updated: %s -> %s", self.public_url, server_url
+            )
+            self.public_url = server_url
+
     def start(self) -> None:
-        self._post(
+        response = self._post(
             "/update-target",
             {
                 "app": self.app,
@@ -59,6 +83,7 @@ class _Session:
                 "offline_message": self.offline_message,
             },
         )
+        self._absorb_share_url(response)
         self._heartbeat.start()
         atexit.register(self.close)
 
@@ -75,7 +100,8 @@ class _Session:
             logger.debug("Failed to mark app offline on shutdown", exc_info=True)
 
     def _tick(self) -> None:
-        self._post("/heartbeat", {"app": self.app, "url": self.url})
+        response = self._post("/heartbeat", {"app": self.app, "url": self.url})
+        self._absorb_share_url(response)
 
     def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -88,7 +114,7 @@ class _Session:
         if r.status_code == 404:
             raise AppNotFoundError(
                 f"App '{self.app}' not found on this account. "
-                f"Create it at https://gradipin.com/dashboard."
+                f"Create it at {_public_host(self.api_url)}/dashboard."
             )
         if r.status_code >= 400:
             raise APIError(
@@ -164,7 +190,7 @@ def share(
 
     arrow = "\u2192"
     print(
-        f"\n  Gradipin: https://gradipin.com/go/{app} "
+        f"\n  Gradipin: {s.public_url} "
         f"{arrow} {share_url}\n  Heartbeat every {interval}s. Ctrl+C to stop.\n",
         file=sys.stderr,
     )

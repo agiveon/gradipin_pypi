@@ -1,11 +1,11 @@
 [project]
 name = "gradipin"
-version = "0.1.0"
+version = "0.1.1"
 description = "Static URLs for your Gradio demos. One line of code."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Gradipin", email = "hello@gradipin.com" }]
+authors = [{ name = "Gradipin" }]
 keywords = ["gradio", "ml", "demo", "tunnel", "share"]
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -40,7 +40,7 @@ dev = [
 gradipin = "gradipin.cli:main"
 
 [project.urls]
-Homepage = "https://gradipin.com"
+Homepage = "https://gradipin.lovable.app"
 Documentation = "https://github.com/gradipin/gradipin-python"
 Repository = "https://github.com/gradipin/gradipin-python"
 Issues = "https://github.com/gradipin/gradipin-python/issues"

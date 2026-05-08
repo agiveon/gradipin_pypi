@@ -8,7 +8,7 @@ import pytest
 import responses
 
 import gradipin
-from gradipin.client import _Session
+from gradipin.client import _public_host, _Session
 from gradipin.exceptions import (
     APIError,
     AppNotFoundError,
@@ -238,3 +238,101 @@ def test_share_rejects_non_blocks_object() -> None:
     pytest.importorskip("gradio")
     with pytest.raises(TypeError, match="Expected a Gradio Blocks"):
         gradipin.share("not a Blocks object", app="demo")
+
+
+# ---------------------------------------------------------------------------
+# public_url / share_url tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("api_url", "expected"),
+    [
+        ("http://test.gradipin.local/v1", "http://test.gradipin.local"),
+        ("https://gradipin.lovable.app/api/v1", "https://gradipin.lovable.app"),
+        ("https://no-suffix.example.com", "https://no-suffix.example.com"),
+        ("https://only-v1.example.com/v1", "https://only-v1.example.com"),
+    ],
+)
+def test_public_host_strips_known_api_suffixes(api_url: str, expected: str) -> None:
+    assert _public_host(api_url) == expected
+
+
+def test_session_init_seeds_public_url_from_fallback() -> None:
+    s = _make_session()
+    assert s.public_url == "http://test.gradipin.local/go/demo"
+
+
+def test_start_captures_share_url_from_response(mock_api: responses.RequestsMock) -> None:
+    canonical = "https://gradipin.lovable.app/go/amir/ocr-pii"
+    mock_api.add(
+        responses.POST,
+        f"{API}/update-target",
+        json={"ok": True, "share_url": canonical, "live": True},
+        status=200,
+    )
+
+    s = _make_session()
+    try:
+        s.start()
+        assert s.public_url == canonical
+    finally:
+        s.close()
+
+
+def test_start_falls_back_when_share_url_missing(mock_api: responses.RequestsMock) -> None:
+    mock_api.add(responses.POST, f"{API}/update-target", json={"ok": True}, status=200)
+
+    s = _make_session()
+    try:
+        s.start()
+        assert s.public_url == "http://test.gradipin.local/go/demo"
+    finally:
+        s.close()
+
+
+def test_start_ignores_non_string_share_url(mock_api: responses.RequestsMock) -> None:
+    mock_api.add(
+        responses.POST,
+        f"{API}/update-target",
+        json={"share_url": None},
+        status=200,
+    )
+    s = _make_session()
+    try:
+        s.start()
+        assert s.public_url == "http://test.gradipin.local/go/demo"
+    finally:
+        s.close()
+
+
+@responses.activate
+def test_heartbeat_updates_public_url_when_server_returns_new_one() -> None:
+    initial = "https://gradipin.lovable.app/go/amir/demo"
+    updated = "https://custom-domain.example.com/go/amir/demo"
+    responses.post(f"{API}/update-target", json={"share_url": initial}, status=200)
+    responses.post(f"{API}/heartbeat", json={"share_url": updated}, status=200)
+    responses.post(f"{API}/offline", json={}, status=200)
+
+    s = _make_session(heartbeat_seconds=0)
+    s.start()
+    assert s.public_url == initial
+    try:
+        deadline = time.time() + 2.0
+        while time.time() < deadline and s.public_url != updated:
+            time.sleep(0.02)
+    finally:
+        s.close()
+    assert s.public_url == updated
+
+
+def test_404_dashboard_url_is_derived_from_api_url(mock_api: responses.RequestsMock) -> None:
+    mock_api.add(responses.POST, f"{API}/update-target", json={}, status=404)
+
+    s = _make_session()
+    with pytest.raises(AppNotFoundError) as exc_info:
+        s.start()
+
+    msg = str(exc_info.value)
+    assert "http://test.gradipin.local/dashboard" in msg
+    assert "gradipin.com" not in msg
