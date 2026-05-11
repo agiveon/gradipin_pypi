@@ -41,6 +41,7 @@ fi
 VERSION="$("$PY" -c 'import tomllib;print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')"
 TAG="v${VERSION}"
 PROJECT_URL="https://test.pypi.org/project/gradipin/${VERSION}/"
+EXISTS_API="https://test.pypi.org/pypi/gradipin/${VERSION}/json"
 
 echo "==> Publishing gradipin v${VERSION} to TestPyPI"
 
@@ -49,9 +50,9 @@ echo "==> Publishing gradipin v${VERSION} to TestPyPI"
 # ---------------------------------------------------------------------------
 echo "==> Checking that v${VERSION} is fresh"
 
-HTTP_CODE="$(curl -s -o /dev/null -w '%{http_code}' "$PROJECT_URL" || echo "000")"
+HTTP_CODE="$(curl -s -o /dev/null -w '%{http_code}' "$EXISTS_API" || echo "000")"
 if [[ "$HTTP_CODE" == "200" ]]; then
-  echo "error: gradipin v${VERSION} already exists on TestPyPI (HTTP 200 at $PROJECT_URL)." >&2
+  echo "error: gradipin v${VERSION} already exists on TestPyPI ($PROJECT_URL)." >&2
   echo "       PyPI versions are immutable. Bump 'version' in pyproject.toml and try again." >&2
   exit 1
 fi
